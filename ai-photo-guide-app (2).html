@@ -1,0 +1,1500 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>拍美美 · AI 出片指导</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;600;700&family=ZCOOL+QingKe+HuangYou&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --rose: #F2647A;
+    --blush: #FADADD;
+    --cream: #FFF8F4;
+    --deep: #1A0A10;
+    --muted: #8C6672;
+    --accent: #E8C4B8;
+    --gold: #D4956A;
+    --overlay-bg: rgba(26,10,16,0.55);
+    --glass: rgba(255,248,244,0.12);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0e0709;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    font-family: 'Noto Serif SC', serif;
+    overflow: hidden;
+  }
+
+  /* Phone shell */
+  .phone {
+    width: 390px;
+    height: 844px;
+    background: var(--deep);
+    border-radius: 50px;
+    border: 2.5px solid rgba(242,100,122,0.35);
+    box-shadow:
+      0 0 0 1px rgba(0,0,0,0.8),
+      0 30px 80px rgba(0,0,0,0.8),
+      inset 0 1px 0 rgba(255,255,255,0.08);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Status bar */
+  .status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 28px 0;
+    font-size: 12px;
+    color: rgba(255,255,255,0.85);
+    flex-shrink: 0;
+    z-index: 100;
+  }
+  .status-bar .time { font-weight: 600; font-size: 15px; letter-spacing: 0.5px; }
+  .status-icons { display: flex; gap: 5px; align-items: center; }
+  .status-icons svg { width: 16px; height: 16px; fill: rgba(255,255,255,0.85); }
+
+  /* Screen container */
+  .screen { flex: 1; position: relative; overflow: hidden; }
+
+  /* ============ SCREENS ============ */
+  .app-screen {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+  }
+  .app-screen.active { opacity: 1; pointer-events: all; }
+
+  /* ============ SPLASH ============ */
+  #screen-splash {
+    background: linear-gradient(160deg, #1f0c12 0%, #0e0709 60%, #1a0810 100%);
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+  }
+  .splash-glow {
+    position: absolute;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(242,100,122,0.3) 0%, transparent 70%);
+    top: 50%; left: 50%; transform: translate(-50%,-60%);
+    animation: pulse 3s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%,100%{transform:translate(-50%,-60%) scale(1);opacity:0.7} 50%{transform:translate(-50%,-60%) scale(1.2);opacity:1} }
+  .splash-logo {
+    position: relative;
+    text-align: center;
+  }
+  .splash-logo .icon {
+    font-size: 72px;
+    display: block;
+    filter: drop-shadow(0 0 20px rgba(242,100,122,0.6));
+    animation: floatY 4s ease-in-out infinite;
+  }
+  @keyframes floatY { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+  .splash-logo h1 {
+    font-family: 'ZCOOL QingKe HuangYou', cursive;
+    font-size: 38px;
+    color: #fff;
+    letter-spacing: 4px;
+    text-shadow: 0 0 30px rgba(242,100,122,0.8);
+    margin-top: 8px;
+  }
+  .splash-logo p {
+    color: var(--accent);
+    font-size: 13px;
+    letter-spacing: 2px;
+    margin-top: 6px;
+    opacity: 0.8;
+  }
+  .splash-btn {
+    position: relative;
+    background: linear-gradient(135deg, var(--rose), #C9465E);
+    color: #fff;
+    border: none;
+    padding: 16px 52px;
+    border-radius: 50px;
+    font-size: 16px;
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 600;
+    cursor: pointer;
+    letter-spacing: 3px;
+    box-shadow: 0 8px 30px rgba(242,100,122,0.4);
+    transition: all 0.3s;
+  }
+  .splash-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 40px rgba(242,100,122,0.55); }
+  .splash-dots { display: flex; gap: 8px; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.2); }
+  .dot.active { background: var(--rose); width: 18px; border-radius: 3px; }
+
+  /* ============ HOME ============ */
+  #screen-home {
+    background: var(--cream);
+    display: flex;
+    flex-direction: column;
+  }
+  #screen-home .scroll-area {
+    flex: 1;
+    overflow-y: auto;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  #screen-home .scroll-area::-webkit-scrollbar { display: none; }
+  .home-header {
+    background: linear-gradient(160deg, #2a0e18 0%, #1a0a10 100%);
+    padding: 16px 24px 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .home-header::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -40px;
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(242,100,122,0.25) 0%, transparent 70%);
+    border-radius: 50%;
+  }
+  .home-header h2 {
+    font-family: 'ZCOOL QingKe HuangYou', cursive;
+    font-size: 24px;
+    color: #fff;
+    letter-spacing: 2px;
+  }
+  .home-header p { color: var(--accent); font-size: 12px; margin-top: 4px; letter-spacing: 1px; }
+  .home-header .avatar {
+    position: absolute;
+    right: 24px; top: 20px;
+    width: 44px; height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--rose), var(--gold));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px;
+    border: 2px solid rgba(255,255,255,0.2);
+  }
+  .quick-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+  }
+  .quick-btn {
+    flex: 1;
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 14px;
+    padding: 12px 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    backdrop-filter: blur(10px);
+  }
+  .quick-btn:hover { background: rgba(255,255,255,0.18); }
+  .quick-btn .qicon { font-size: 24px; display: block; }
+  .quick-btn span { color: #fff; font-size: 11px; display: block; margin-top: 4px; letter-spacing: 1px; opacity: 0.85; }
+
+  .section { padding: 14px 20px 0; }
+  .section-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--deep);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .section-title::before { content: ''; width: 3px; height: 16px; background: var(--rose); border-radius: 2px; display: inline-block; }
+
+  /* Style cards */
+  .style-scroll {
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    scrollbar-width: none;
+  }
+  .style-scroll::-webkit-scrollbar { display: none; }
+  .style-card {
+    flex-shrink: 0;
+    width: 100px;
+    border-radius: 16px;
+    overflow: hidden;
+    cursor: pointer;
+    position: relative;
+    border: 2px solid transparent;
+    transition: all 0.25s;
+  }
+  .style-card.selected { border-color: var(--rose); }
+  .style-card img-placeholder {
+    display: block;
+    width: 100%;
+    height: 130px;
+    border-radius: 14px;
+  }
+  .style-card-bg {
+    width: 100%;
+    height: 110px;
+    border-radius: 14px;
+    background: var(--grad, linear-gradient(160deg,#fadadd,#e8c4b8));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+  }
+  .style-name {
+    text-align: center;
+    font-size: 11px;
+    color: var(--deep);
+    margin-top: 6px;
+    font-weight: 600;
+    letter-spacing: 1px;
+  }
+  .style-tag {
+    position: absolute;
+    top: 8px; right: 8px;
+    background: var(--rose);
+    color: #fff;
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 10px;
+    letter-spacing: 0.5px;
+  }
+
+  /* Multi-upload */
+  .multi-upload-block {
+    background: #fff;
+    border-radius: 16px;
+    padding: 14px;
+    border: 1.5px solid var(--accent);
+  }
+  .mu-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .mu-title { font-size: 12px; font-weight: 700; color: var(--deep); letter-spacing: 0.5px; }
+  .mu-count { font-size: 10px; color: var(--rose); font-weight: 600; }
+  .mu-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+  .mu-thumb-wrap { position: relative; width: 64px; height: 64px; flex-shrink: 0; }
+  .mu-thumb-wrap img { width: 100%; height: 100%; border-radius: 10px; object-fit: cover; border: 1.5px solid var(--accent); }
+  .mu-del {
+    position: absolute; top: -5px; right: -5px;
+    width: 18px; height: 18px;
+    background: var(--rose); border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; color: #fff; cursor: pointer;
+    border: 1.5px solid #fff; line-height: 1; font-weight: 700;
+  }
+  .mu-add-btn {
+    width: 64px; height: 64px; border-radius: 10px;
+    border: 1.5px dashed var(--rose);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    cursor: pointer; color: var(--rose);
+    background: #fff5f5; transition: background 0.2s; flex-shrink: 0;
+  }
+  .mu-add-btn:hover { background: #ffe8ea; }
+
+  /* Upload row old */
+    background: #fff;
+    border-radius: 16px;
+    padding: 18px 14px;
+    text-align: center;
+    border: 1.5px dashed var(--accent);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .upload-card:hover { border-color: var(--rose); background: #fff5f5; }
+  .upload-card .uicon { font-size: 30px; display: block; }
+  .upload-card h4 { font-size: 12px; color: var(--deep); margin-top: 8px; font-weight: 700; }
+  .upload-card p { font-size: 10px; color: var(--muted); margin-top: 4px; line-height: 1.5; }
+  .start-shoot-btn {
+    margin: 0 20px 24px;
+    width: calc(100% - 40px);
+    padding: 18px;
+    background: linear-gradient(135deg, var(--rose), #C9465E);
+    color: #fff;
+    border: none;
+    border-radius: 20px;
+    font-size: 17px;
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 700;
+    letter-spacing: 3px;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(242,100,122,0.35);
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .start-shoot-btn:hover { transform: translateY(-2px); }
+
+  /* ============ STYLE SELECT ============ */
+  #screen-style {
+    background: var(--cream);
+    display: flex;
+    flex-direction: column;
+  }
+  #screen-style .scroll-area {
+    flex: 1;
+    overflow-y: auto;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  #screen-style .scroll-area::-webkit-scrollbar { display: none; }
+  .style-header {
+    background: linear-gradient(160deg, #2a0e18 0%, #1a0a10 100%);
+    padding: 20px 24px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .back-btn {
+    width: 36px; height: 36px;
+    background: rgba(255,255,255,0.12);
+    border: none;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    color: #fff;
+    font-size: 18px;
+    flex-shrink: 0;
+    transition: background 0.2s;
+  }
+  .back-btn:hover { background: rgba(255,255,255,0.2); }
+  .style-header h2 { color: #fff; font-family: 'ZCOOL QingKe HuangYou', cursive; font-size: 22px; letter-spacing: 2px; }
+  .style-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    padding: 20px;
+  }
+  .style-item {
+    border-radius: 18px;
+    overflow: hidden;
+    cursor: pointer;
+    position: relative;
+    border: 2.5px solid transparent;
+    transition: all 0.25s;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+  }
+  .style-item:hover, .style-item.active { border-color: var(--rose); transform: scale(1.02); }
+  .style-item-img {
+    width: 100%;
+    height: 160px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 50px;
+  }
+  .style-item-info {
+    background: #fff;
+    padding: 10px 12px;
+  }
+  .style-item-info h4 { font-size: 13px; font-weight: 700; color: var(--deep); }
+  .style-item-info p { font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .style-item .check {
+    position: absolute;
+    top: 10px; right: 10px;
+    width: 24px; height: 24px;
+    background: var(--rose);
+    border-radius: 50%;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 13px;
+  }
+  .style-item.active .check { display: flex; }
+  .confirm-style-btn {
+    margin: 0 20px 24px;
+    width: calc(100% - 40px);
+    padding: 16px;
+    background: linear-gradient(135deg, var(--rose), #C9465E);
+    color: #fff;
+    border: none;
+    border-radius: 18px;
+    font-size: 16px;
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 700;
+    letter-spacing: 2px;
+    cursor: pointer;
+    box-shadow: 0 6px 20px rgba(242,100,122,0.35);
+    transition: all 0.3s;
+    position: sticky;
+    bottom: 20px;
+  }
+
+  /* ============ CAMERA ============ */
+  #screen-camera {
+    background: #000;
+    position: relative;
+  }
+  .camera-bg {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(160deg, #1a0c14 0%, #0a0a0a 100%);
+    overflow: hidden;
+  }
+  /* Simulated camera preview person silhouette */
+  .camera-person {
+    position: absolute;
+    bottom: 80px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 160px;
+    height: 320px;
+  }
+  .person-silhouette {
+    width: 100%;
+    height: 100%;
+    opacity: 0.35;
+    background: linear-gradient(180deg, rgba(255,220,200,0.5) 0%, rgba(200,160,130,0.3) 100%);
+    border-radius: 80px 80px 40px 40px;
+    filter: blur(2px);
+  }
+  /* Pose overlay - semi-transparent guide */
+  .pose-overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+  }
+  .pose-silhouette {
+    position: absolute;
+    bottom: 75px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 155px;
+    height: 310px;
+    border-radius: 77px 77px 38px 38px;
+    border: 2px dashed rgba(255,255,255,0.55);
+    background: rgba(242,100,122,0.08);
+    animation: poseBreath 2.5s ease-in-out infinite;
+  }
+  @keyframes poseBreath { 0%,100%{opacity:0.7} 50%{opacity:1} }
+
+  /* Dashed body lines */
+  .body-lines {
+    position: absolute;
+    bottom: 75px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 155px;
+    height: 310px;
+    pointer-events: none;
+  }
+  /* Arrows */
+  .guide-arrow {
+    position: absolute;
+    background: rgba(242,100,122,0.9);
+    color: #fff;
+    font-size: 10px;
+    padding: 4px 8px;
+    border-radius: 20px;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    animation: arrowPop 1s ease forwards;
+  }
+  @keyframes arrowPop { from{opacity:0;transform:scale(0.8)} to{opacity:1;transform:scale(1)} }
+  .guide-arrow::before { content: '→'; font-size: 12px; }
+  .arrow-head { left: 48px; top: 145px; animation-delay: 0.2s; }
+  .arrow-waist { right: 20px; top: 200px; animation-delay: 0.5s; }
+  .arrow-foot { left: 30px; bottom: 130px; animation-delay: 0.8s; }
+
+  /* Grid overlay */
+  .grid-overlay {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.07) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.07) 1px, transparent 1px);
+    background-size: 33.33% 33.33%;
+    pointer-events: none;
+  }
+
+  /* Camera UI */
+  .camera-top-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    padding: 14px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: linear-gradient(to bottom, rgba(0,0,0,0.6), transparent);
+    z-index: 10;
+  }
+  .cam-btn {
+    width: 38px; height: 38px;
+    background: rgba(255,255,255,0.12);
+    border: none;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    color: #fff;
+    font-size: 16px;
+    backdrop-filter: blur(6px);
+  }
+  .style-badge {
+    background: rgba(242,100,122,0.85);
+    color: #fff;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    letter-spacing: 1px;
+    font-weight: 600;
+    backdrop-filter: blur(6px);
+  }
+
+  /* Dual guide panels */
+  .guide-panels {
+    position: absolute;
+    bottom: 130px; left: 0; right: 0;
+    display: flex;
+    gap: 10px;
+    padding: 0 14px;
+    z-index: 10;
+  }
+  .guide-panel {
+    flex: 1;
+    background: rgba(0,0,0,0.55);
+    border-radius: 14px;
+    padding: 10px 12px;
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255,255,255,0.12);
+  }
+  .guide-panel .label {
+    font-size: 9px;
+    letter-spacing: 1.5px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .guide-panel.model .label { color: var(--rose); }
+  .guide-panel.shooter .label { color: #8BC4E8; }
+  .guide-panel .label-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+  }
+  .guide-panel.model .label-dot { background: var(--rose); }
+  .guide-panel.shooter .label-dot { background: #8BC4E8; }
+  .guide-panel p { color: rgba(255,255,255,0.9); font-size: 11px; line-height: 1.6; letter-spacing: 0.5px; }
+
+  /* Camera controls */
+  .camera-controls {
+    position: absolute;
+    bottom: 30px; left: 0; right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 0 30px;
+    z-index: 10;
+  }
+  .ctrl-btn {
+    width: 46px; height: 46px;
+    background: rgba(255,255,255,0.15);
+    border: none;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+    color: #fff;
+    font-size: 20px;
+    backdrop-filter: blur(6px);
+  }
+  .shutter-btn {
+    width: 72px; height: 72px;
+    border-radius: 50%;
+    background: #fff;
+    border: 4px solid rgba(255,255,255,0.3);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+    transition: transform 0.1s;
+    position: relative;
+  }
+  .shutter-btn::before {
+    content: '';
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: #fff;
+    border: 2px solid rgba(0,0,0,0.1);
+  }
+  .shutter-btn:active { transform: scale(0.95); }
+
+  /* Flash overlay */
+  .flash-overlay {
+    position: absolute;
+    inset: 0;
+    background: #fff;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 50;
+    transition: opacity 0.1s;
+  }
+  .flash-overlay.flash { animation: flashAnim 0.5s ease; }
+  @keyframes flashAnim { 0%{opacity:0} 10%{opacity:0.9} 100%{opacity:0} }
+
+  /* ============ RESULT ============ */
+  #screen-result {
+    background: linear-gradient(160deg, #1a0a10 0%, #0e0709 100%);
+    display: flex;
+    flex-direction: column;
+  }
+  #screen-result .scroll-area {
+    flex: 1;
+    overflow-y: auto;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  #screen-result .scroll-area::-webkit-scrollbar { display: none; }
+  .result-header {
+    padding: 20px 24px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .result-header h2 { color: #fff; font-family: 'ZCOOL QingKe HuangYou', cursive; font-size: 22px; letter-spacing: 2px; }
+  .result-preview {
+    margin: 0 20px;
+    border-radius: 24px;
+    overflow: hidden;
+    background: linear-gradient(160deg, #2a1020, #1a0c18);
+    height: 300px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 80px;
+    position: relative;
+    border: 1px solid rgba(242,100,122,0.2);
+  }
+  .result-preview::after {
+    content: '✨ 出片效果';
+    position: absolute;
+    bottom: 16px;
+    background: rgba(0,0,0,0.5);
+    color: rgba(255,255,255,0.7);
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 11px;
+    letter-spacing: 1px;
+  }
+  .score-bar {
+    margin: 20px 20px 0;
+    background: rgba(255,255,255,0.06);
+    border-radius: 18px;
+    padding: 16px 18px;
+  }
+  .score-bar h3 { color: #fff; font-size: 13px; margin-bottom: 12px; letter-spacing: 1px; }
+  .score-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .score-item span { color: var(--accent); font-size: 11px; width: 40px; }
+  .score-track { flex: 1; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; overflow: hidden; }
+  .score-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--rose), var(--gold)); transition: width 1s ease; }
+  .score-val { color: var(--rose); font-size: 11px; width: 28px; text-align: right; }
+  .result-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin: 16px 20px;
+  }
+  .result-btn {
+    padding: 14px;
+    border-radius: 16px;
+    border: none;
+    font-size: 13px;
+    font-family: 'Noto Serif SC', serif;
+    font-weight: 700;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.25s;
+  }
+  .result-btn.primary { background: linear-gradient(135deg, var(--rose), #C9465E); color: #fff; box-shadow: 0 6px 20px rgba(242,100,122,0.3); }
+  .result-btn.secondary { background: rgba(255,255,255,0.08); color: #fff; border: 1px solid rgba(255,255,255,0.15); }
+  .result-btn:hover { transform: translateY(-1px); }
+  .retake-btn {
+    margin: 0 20px 28px;
+    width: calc(100% - 40px);
+    padding: 15px;
+    background: transparent;
+    color: rgba(255,255,255,0.5);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 16px;
+    font-family: 'Noto Serif SC', serif;
+    font-size: 13px;
+    letter-spacing: 2px;
+    cursor: pointer;
+    transition: all 0.25s;
+  }
+  .retake-btn:hover { color: rgba(255,255,255,0.8); border-color: rgba(255,255,255,0.3); }
+
+  /* Bottom nav */
+  .bottom-nav {
+    position: relative;
+    height: 72px;
+    background: rgba(26,10,16,0.95);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(255,255,255,0.08);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding: 0 10px 8px;
+    flex-shrink: 0;
+    z-index: 20;
+  }
+  .nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    cursor: pointer;
+    padding: 6px 12px;
+    border-radius: 14px;
+    transition: all 0.2s;
+  }
+  .nav-item.active { background: rgba(242,100,122,0.12); }
+  .nav-icon { font-size: 22px; }
+  .nav-label { font-size: 10px; letter-spacing: 1px; color: rgba(255,255,255,0.4); }
+  .nav-item.active .nav-label { color: var(--rose); }
+  .nav-camera-btn {
+    width: 52px; height: 52px;
+    background: linear-gradient(135deg, var(--rose), #C9465E);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 24px;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(242,100,122,0.45);
+    transition: all 0.25s;
+    margin-bottom: 4px;
+  }
+  .nav-camera-btn:hover { transform: scale(1.05); box-shadow: 0 6px 28px rgba(242,100,122,0.55); }
+
+  /* Notice when in camera mode */
+  #screen-camera .bottom-nav { display: none; }
+
+  /* Loading dots */
+  .loading-dots { display: inline-flex; gap: 4px; }
+  .loading-dots span {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--rose);
+    animation: ldot 1.2s ease-in-out infinite;
+  }
+  .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes ldot { 0%,80%,100%{opacity:0.3;transform:scale(0.8)} 40%{opacity:1;transform:scale(1.2)} }
+
+  /* Scroll handled per scroll-area */
+
+  /* Recognition pulse */
+  .recog-indicator {
+    position: absolute;
+    top: 70px; right: 16px;
+    background: rgba(0,0,0,0.55);
+    border: 1px solid rgba(242,100,122,0.4);
+    border-radius: 10px;
+    padding: 6px 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    z-index: 10;
+  }
+  .recog-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: #4AE08C;
+    animation: recogPulse 1s ease-in-out infinite;
+  }
+  @keyframes recogPulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  .recog-indicator span { color: rgba(255,255,255,0.85); font-size: 10px; letter-spacing: 0.5px; }
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <span class="time">9:41</span>
+    <div class="status-icons">
+      <svg viewBox="0 0 24 24"><path d="M1.5 8.5C5.5 4.5 10.5 3 12 3s6.5 1.5 10.5 5.5L21 11c-3-3-6-4.5-9-4.5S6 8 3 11z"/><path d="M5.5 12C7.5 10 9.5 9 12 9s4.5 1 6.5 3L17 13.5c-1.5-1.5-3-2.5-5-2.5s-3.5 1-5 2.5z"/><path d="M9 15.5c1-1 2-1.5 3-1.5s2 .5 3 1.5L12 19z"/></svg>
+      <svg viewBox="0 0 24 24"><rect x="2" y="7" width="18" height="10" rx="2"/><rect x="21" y="10" width="2" height="4" rx="1"/><rect x="4" y="9" width="12" height="6" rx="1" style="fill:#fff"/></svg>
+    </div>
+  </div>
+
+  <!-- Main Screens -->
+  <div class="screen">
+
+    <!-- SPLASH -->
+    <div class="app-screen active" id="screen-splash">
+      <div class="splash-glow"></div>
+      <div class="splash-logo">
+        <span class="icon">📸</span>
+        <h1>拍美美</h1>
+        <p>AI 人像出片指导</p>
+      </div>
+      <button class="splash-btn" onclick="goTo('home')">开始体验</button>
+      <div class="splash-dots">
+        <div class="dot active"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+      </div>
+    </div>
+
+    <!-- HOME -->
+    <div class="app-screen" id="screen-home">
+      <div class="scroll-area">
+        <div class="home-header">
+          <h2>你好，美女 ✨</h2>
+          <p>今天想拍什么风格？</p>
+          <div class="avatar">👩</div>
+          <div class="quick-actions">
+            <div class="quick-btn" onclick="goTo('style')">
+              <span class="qicon">🎨</span>
+              <span>选风格</span>
+            </div>
+            <div class="quick-btn" onclick="goTo('camera')">
+              <span class="qicon">📷</span>
+              <span>开始拍</span>
+            </div>
+            <div class="quick-btn">
+              <span class="qicon">📁</span>
+              <span>我的照片</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">热门风格</div>
+          <div class="style-scroll">
+            <div class="style-card selected" data-name="甜妹风" onclick="selectStyleHome(this,'甜妹风')">
+              <div class="style-card-bg" style="--grad:linear-gradient(160deg,#FADADD,#F2AFBE)">🌸</div>
+              <div class="style-name">甜妹风</div>
+              <div class="style-tag">热门</div>
+            </div>
+            <div class="style-card" data-name="清冷风" onclick="selectStyleHome(this,'清冷风')">
+              <div class="style-card-bg" style="--grad:linear-gradient(160deg,#D6E8F0,#A8C8DA)">🌊</div>
+              <div class="style-name">清冷风</div>
+            </div>
+            <div class="style-card" data-name="复古风" onclick="selectStyleHome(this,'复古风')">
+              <div class="style-card-bg" style="--grad:linear-gradient(160deg,#E8D5B0,#C9A86C)">🎞️</div>
+              <div class="style-name">复古风</div>
+            </div>
+            <div class="style-card" data-name="氛围感" onclick="selectStyleHome(this,'氛围感')">
+              <div class="style-card-bg" style="--grad:linear-gradient(160deg,#C8ADCC,#9B72A6)">✨</div>
+              <div class="style-name">氛围感</div>
+              <div class="style-tag">新</div>
+            </div>
+            <div class="style-card" data-name="轻运动" onclick="selectStyleHome(this,'轻运动')">
+              <div class="style-card-bg" style="--grad:linear-gradient(160deg,#ADCCA8,#6FA868)">🌿</div>
+              <div class="style-name">轻运动</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="section" style="margin-top:10px">
+          <div class="section-title">上传照片建立专属数据库</div>
+
+          <!-- 本人照片 -->
+          <div class="multi-upload-block" id="block-self">
+            <div class="mu-header">
+              <span class="mu-title">🤳 本人照片</span>
+              <span class="mu-count" id="count-self">已上传 0 张</span>
+            </div>
+            <div class="mu-grid" id="grid-self">
+              <label class="mu-add-btn" for="input-self">
+                <input type="file" id="input-self" accept="image/*" multiple style="display:none" onchange="addPhotos(this,'grid-self','count-self')">
+                <span style="font-size:22px">＋</span>
+                <span style="font-size:10px;margin-top:2px">添加照片</span>
+              </label>
+            </div>
+          </div>
+
+          <!-- 参考照片 -->
+          <div class="multi-upload-block" id="block-ref" style="margin-top:14px">
+            <div class="mu-header">
+              <span class="mu-title">🌟 参考照片</span>
+              <span class="mu-count" id="count-ref">已上传 0 张</span>
+            </div>
+            <div class="mu-grid" id="grid-ref">
+              <label class="mu-add-btn" for="input-ref">
+                <input type="file" id="input-ref" accept="image/*" multiple style="display:none" onchange="addPhotos(this,'grid-ref','count-ref')">
+                <span style="font-size:22px">＋</span>
+                <span style="font-size:10px;margin-top:2px">添加照片</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <button class="start-shoot-btn" onclick="goTo('camera')" style="margin-top:14px">
+          📸 立即开始拍照
+        </button>
+      </div>
+
+      <div class="bottom-nav">
+        <div class="nav-item active">
+          <span class="nav-icon">🏠</span>
+          <span class="nav-label">首页</span>
+        </div>
+        <div class="nav-item" onclick="goTo('style')">
+          <span class="nav-icon">🎨</span>
+          <span class="nav-label">风格</span>
+        </div>
+        <div class="nav-camera-btn" onclick="goTo('camera')">📷</div>
+        <div class="nav-item">
+          <span class="nav-icon">🖼️</span>
+          <span class="nav-label">相册</span>
+        </div>
+        <div class="nav-item">
+          <span class="nav-icon">👤</span>
+          <span class="nav-label">我的</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- STYLE SELECT -->
+    <div class="app-screen" id="screen-style">
+      <div class="scroll-area">
+        <div class="style-header">
+          <button class="back-btn" onclick="goTo('home')">‹</button>
+          <h2>选择拍摄风格</h2>
+        </div>
+
+        <div style="padding:12px 20px 0; display:flex; gap:8px; overflow-x:auto; scrollbar-width:none;">
+          <div style="flex-shrink:0; background:var(--rose); color:#fff; padding:6px 14px; border-radius:20px; font-size:12px; letter-spacing:1px; cursor:pointer;">全部</div>
+          <div style="flex-shrink:0; background:#fff; color:var(--deep); padding:6px 14px; border-radius:20px; font-size:12px; letter-spacing:1px; cursor:pointer; border:1px solid var(--accent);">少女系</div>
+          <div style="flex-shrink:0; background:#fff; color:var(--deep); padding:6px 14px; border-radius:20px; font-size:12px; letter-spacing:1px; cursor:pointer; border:1px solid var(--accent);">高冷系</div>
+          <div style="flex-shrink:0; background:#fff; color:var(--deep); padding:6px 14px; border-radius:20px; font-size:12px; letter-spacing:1px; cursor:pointer; border:1px solid var(--accent);">文艺系</div>
+          <div style="flex-shrink:0; background:#fff; color:var(--deep); padding:6px 14px; border-radius:20px; font-size:12px; letter-spacing:1px; cursor:pointer; border:1px solid var(--accent);">时尚系</div>
+        </div>
+
+        <div class="style-grid">
+          <div class="style-item active" data-name="甜妹风" data-icon="🌸" data-model="对齐粉色叠层，头再歪一点" data-shooter="镜头低5cm，对焦眼睛" onclick="pickStyle(this)">
+            <div class="style-item-img" style="background:linear-gradient(160deg,#FADADD,#F2AFBE)">🌸</div>
+            <div class="style-item-info"><h4>甜妹风</h4><p>柔和可爱 · 减龄</p></div>
+            <div class="check">✓</div>
+          </div>
+          <div class="style-item" data-name="清冷风" data-icon="🌊" data-model="挺背收颌，眼神放空" data-shooter="平视角度，留天空背景" onclick="pickStyle(this)">
+            <div class="style-item-img" style="background:linear-gradient(160deg,#D6E8F0,#A8C8DA)">🌊</div>
+            <div class="style-item-info"><h4>清冷风</h4><p>高冷清透 · 精致</p></div>
+            <div class="check">✓</div>
+          </div>
+          <div class="style-item" data-name="复古风" data-icon="🎞️" data-model="侧身45度，手轻搭腰间" data-shooter="逆光拍摄，微欠身低角" onclick="pickStyle(this)">
+            <div class="style-item-img" style="background:linear-gradient(160deg,#E8D5B0,#C9A86C)">🎞️</div>
+            <div class="style-item-info"><h4>复古风</h4><p>胶片质感 · 怀旧</p></div>
+            <div class="check">✓</div>
+          </div>
+          <div class="style-item" data-name="氛围感" data-icon="✨" data-model="低头或侧脸，营造神秘感" data-shooter="散景光晕，背景虚化" onclick="pickStyle(this)">
+            <div class="style-item-img" style="background:linear-gradient(160deg,#C8ADCC,#9B72A6)">✨</div>
+            <div class="style-item-info"><h4>氛围感</h4><p>神秘朦胧 · 高级</p></div>
+            <div class="check">✓</div>
+          </div>
+          <div class="style-item" data-name="轻运动" data-icon="🌿" data-model="双手自然摆动，面带微笑" data-shooter="稍高角度，抓拍动态" onclick="pickStyle(this)">
+            <div class="style-item-img" style="background:linear-gradient(160deg,#ADCCA8,#6FA868)">🌿</div>
+            <div class="style-item-info"><h4>轻运动</h4><p>活力健康 · 清爽</p></div>
+            <div class="check">✓</div>
+          </div>
+          <div class="style-item" data-name="度假风" data-icon="☀️" data-model="举手遮阳，慵懒侧靠" data-shooter="仰拍增高，天空留白" onclick="pickStyle(this)">
+            <div class="style-item-img" style="background:linear-gradient(160deg,#F0E6CC,#D4A878)">☀️</div>
+            <div class="style-item-info"><h4>度假风</h4><p>慵懒阳光 · 自由</p></div>
+            <div class="check">✓</div>
+          </div>
+        </div>
+
+        <button class="confirm-style-btn" id="confirm-style-btn" onclick="confirmStyle()">✓ 确认风格，开始拍摄</button>
+      </div>
+    </div>
+
+    <!-- CAMERA -->
+    <div class="app-screen" id="screen-camera">
+      <!-- Real camera video -->
+      <video id="cam-video" autoplay playsinline webkit-playsinline muted
+        style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;background:#000;opacity:0;transition:opacity 0.3s;"></video>
+
+      <!-- Hidden canvas for capturing -->
+      <canvas id="cam-canvas" style="display:none;"></canvas>
+
+      <!-- Uploaded photo preview (fallback) -->
+      <img id="cam-upload-preview" src="" alt=""
+        style="display:none;position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;">
+
+      <!-- Dark background base -->
+      <div style="position:absolute;inset:0;background:#0e0709;z-index:-1;"></div>
+
+      <!-- Permission denied fallback UI -->
+      <div id="cam-fallback" style="display:none;position:absolute;inset:0;z-index:6;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(160deg,#1a0a10,#0e0709);padding:0 32px;gap:0;">
+
+        <!-- Icon with glow -->
+        <div style="position:relative;margin-bottom:20px;">
+          <div style="width:90px;height:90px;border-radius:50%;background:rgba(242,100,122,0.12);border:1.5px solid rgba(242,100,122,0.3);display:flex;align-items:center;justify-content:center;font-size:42px;">📷</div>
+          <div style="position:absolute;bottom:0;right:0;width:26px;height:26px;background:#E85555;border-radius:50%;border:2px solid #0e0709;display:flex;align-items:center;justify-content:center;font-size:13px;">✕</div>
+        </div>
+
+        <h3 style="color:#fff;font-family:'ZCOOL QingKe HuangYou',cursive;font-size:22px;letter-spacing:2px;margin-bottom:10px;">摄像头权限被拒绝</h3>
+        <p style="color:rgba(255,255,255,0.5);font-size:12px;text-align:center;line-height:2;margin-bottom:28px;">浏览器阻止了摄像头访问<br>请按以下步骤开启权限后重试</p>
+
+        <!-- Step guide -->
+        <div style="width:100%;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:16px 18px;margin-bottom:24px;">
+          <div style="color:rgba(255,255,255,0.35);font-size:10px;letter-spacing:1.5px;margin-bottom:12px;">如何开启摄像头权限</div>
+          <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:10px;">
+            <div style="width:20px;height:20px;border-radius:50%;background:var(--rose);color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;">1</div>
+            <p style="color:rgba(255,255,255,0.7);font-size:12px;line-height:1.6;margin:0;">点击浏览器地址栏左侧的<br><span style="color:var(--rose);">🔒 锁形图标</span> 或 <span style="color:var(--rose);">ⓘ 信息图标</span></p>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:12px;margin-bottom:10px;">
+            <div style="width:20px;height:20px;border-radius:50%;background:var(--rose);color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;">2</div>
+            <p style="color:rgba(255,255,255,0.7);font-size:12px;line-height:1.6;margin:0;">找到「摄像头」选项<br>将权限改为 <span style="color:var(--rose);">允许</span></p>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:12px;">
+            <div style="width:20px;height:20px;border-radius:50%;background:var(--rose);color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;">3</div>
+            <p style="color:rgba(255,255,255,0.7);font-size:12px;line-height:1.6;margin:0;">点击下方「重新尝试」按钮</p>
+          </div>
+        </div>
+
+        <!-- Retry button -->
+        <button onclick="startCamera()" style="width:100%;background:linear-gradient(135deg,var(--rose),#C9465E);color:#fff;border:none;padding:15px;border-radius:16px;font-size:15px;font-family:'Noto Serif SC',serif;font-weight:700;letter-spacing:2px;cursor:pointer;box-shadow:0 6px 24px rgba(242,100,122,0.35);margin-bottom:12px;">
+          🔄 重新尝试
+        </button>
+        <button onclick="stopCamera();goTo('home')" style="background:transparent;color:rgba(255,255,255,0.3);border:1px solid rgba(255,255,255,0.12);padding:11px 28px;border-radius:50px;font-size:12px;cursor:pointer;letter-spacing:1px;width:100%;">
+          返回首页
+        </button>
+      </div>
+
+      <!-- Grid overlay -->
+      <div class="grid-overlay" style="z-index:1;pointer-events:none;"></div>
+
+      <!-- 摄像头权限请求弹窗 -->
+      <div id="cam-permission-modal" style="display:none;position:absolute;inset:0;z-index:50;align-items:center;justify-content:center;padding:28px;background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);">
+        <div style="background:linear-gradient(160deg,#2a0e18,#1a0a10);border-radius:24px;padding:28px 24px;width:100%;border:1px solid rgba(242,100,122,0.25);box-shadow:0 20px 60px rgba(0,0,0,0.6);">
+          <!-- Icon -->
+          <div style="text-align:center;margin-bottom:16px;">
+            <div style="width:72px;height:72px;border-radius:50%;background:rgba(242,100,122,0.12);border:1.5px solid rgba(242,100,122,0.35);display:inline-flex;align-items:center;justify-content:center;font-size:34px;">📷</div>
+          </div>
+          <!-- Title -->
+          <h3 style="color:#fff;font-family:'ZCOOL QingKe HuangYou',cursive;font-size:20px;letter-spacing:2px;text-align:center;margin-bottom:10px;">需要使用摄像头</h3>
+          <p style="color:rgba(255,255,255,0.55);font-size:12px;text-align:center;line-height:1.9;margin-bottom:24px;">
+            拍美美需要访问你的摄像头<br>用于实时姿态引导和拍摄照片<br>
+            <span style="color:rgba(255,255,255,0.3);font-size:11px;">你的画面不会被上传或储存</span>
+          </p>
+          <!-- Buttons -->
+          <button onclick="grantCameraPermission()" style="width:100%;background:linear-gradient(135deg,var(--rose),#C9465E);color:#fff;border:none;padding:15px;border-radius:16px;font-size:15px;font-family:'Noto Serif SC',serif;font-weight:700;letter-spacing:2px;cursor:pointer;box-shadow:0 6px 24px rgba(242,100,122,0.35);margin-bottom:10px;">
+            📷 允许使用摄像头
+          </button>
+          <button onclick="stopCamera();goTo('home')" style="width:100%;background:transparent;color:rgba(255,255,255,0.3);border:1px solid rgba(255,255,255,0.12);padding:12px;border-radius:16px;font-size:13px;font-family:'Noto Serif SC',serif;cursor:pointer;letter-spacing:1px;">
+            暂不使用，返回首页
+          </button>
+        </div>
+      </div>
+
+      <!-- Pose overlay -->
+      <div class="pose-overlay" style="z-index:2;">
+        <div class="pose-silhouette"></div>
+        <div class="guide-arrow" style="position:absolute;top:160px;left:52px;z-index:3;">头左偏5°</div>
+        <div class="guide-arrow" style="position:absolute;top:260px;right:22px;z-index:3;">腰稍微扭</div>
+        <div class="guide-arrow" style="position:absolute;bottom:185px;left:26px;z-index:3;">腿交叉</div>
+      </div>
+
+      <!-- AI Recognition indicator -->
+      <div class="recog-indicator" style="z-index:10;">
+        <div class="recog-dot"></div>
+        <span id="recog-label">AI 识别中</span>
+      </div>
+
+      <!-- Top bar -->
+      <div class="camera-top-bar" style="z-index:10;">
+        <button class="cam-btn" onclick="stopCamera();goTo('home')">✕</button>
+        <div class="style-badge" id="cam-style-badge">🌸 甜妹风</div>
+        <button class="cam-btn" onclick="stopCamera();goTo('style')">⚙️</button>
+      </div>
+
+      <!-- Dual guides -->
+      <div class="guide-panels" style="z-index:10;">
+        <div class="guide-panel model">
+          <div class="label"><div class="label-dot"></div>模特端</div>
+          <p id="cam-model-tip">对齐粉色叠层，头再歪一点</p>
+        </div>
+        <div class="guide-panel shooter">
+          <div class="label"><div class="label-dot"></div>拍摄端</div>
+          <p id="cam-shooter-tip">镜头低5cm，对焦眼睛</p>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="camera-controls" style="z-index:10;">
+        <button class="ctrl-btn" onclick="stopCamera();goTo('style')">🎨</button>
+        <div class="shutter-btn" id="shutter-btn" onclick="takePhoto()"></div>
+        <button class="ctrl-btn" id="flip-btn" onclick="flipCamera()">🔄</button>
+      </div>
+
+      <div class="flash-overlay" id="flash"></div>
+    </div>
+
+    <!-- RESULT -->
+    <div class="app-screen" id="screen-result">
+      <div class="scroll-area">
+        <div class="result-header">
+          <button class="back-btn" style="background:rgba(255,255,255,0.08)" onclick="goTo('camera')">‹</button>
+          <h2>出片分析 🎉</h2>
+        </div>
+
+        <div class="result-preview" id="result-preview">
+          <img id="result-img" style="width:100%;height:100%;object-fit:cover;display:none;border-radius:24px;" src="" alt="">
+          <span id="result-placeholder" style="font-size:80px;">📸</span>
+        </div>
+
+        <div class="score-bar">
+          <h3>📊 AI 出片评分 · <span id="result-style-name" style="color:var(--rose);font-size:12px;">甜妹风</span></h3>
+          <div class="score-item">
+            <span>构图</span>
+            <div class="score-track"><div class="score-fill" data-width="88%" style="width:88%"></div></div>
+            <span class="score-val">88</span>
+          </div>
+          <div class="score-item">
+            <span>姿态</span>
+            <div class="score-track"><div class="score-fill" data-width="82%" style="width:82%"></div></div>
+            <span class="score-val">82</span>
+          </div>
+          <div class="score-item">
+            <span>光影</span>
+            <div class="score-track"><div class="score-fill" data-width="75%" style="width:75%"></div></div>
+            <span class="score-val">75</span>
+          </div>
+          <div class="score-item">
+            <span>风格</span>
+            <div class="score-track"><div class="score-fill" data-width="92%" style="width:92%"></div></div>
+            <span class="score-val">92</span>
+          </div>
+        </div>
+
+        <div style="margin:16px 20px 0; background:rgba(255,255,255,0.05); border-radius:14px; padding:14px 16px; border:1px solid rgba(242,100,122,0.2);">
+          <div style="color:var(--rose);font-size:11px;letter-spacing:1px;margin-bottom:8px;">💡 AI 改进建议</div>
+          <p style="color:rgba(255,255,255,0.75);font-size:12px;line-height:1.8">光线再明亮一些效果更好<br>尝试右手放锁骨位置<br>整体非常符合甜妹风！</p>
+        </div>
+
+        <div class="result-actions">
+          <button class="result-btn primary">💾 保存照片</button>
+          <button class="result-btn secondary">📤 分享</button>
+        </div>
+
+        <button class="retake-btn" onclick="goTo('camera')">↩ 重新拍摄</button>
+      </div>
+
+      <div class="bottom-nav">
+        <div class="nav-item" onclick="goTo('home')">
+          <span class="nav-icon">🏠</span>
+          <span class="nav-label">首页</span>
+        </div>
+        <div class="nav-item" onclick="goTo('style')">
+          <span class="nav-icon">🎨</span>
+          <span class="nav-label">风格</span>
+        </div>
+        <div class="nav-camera-btn" onclick="goTo('camera')">📷</div>
+        <div class="nav-item active">
+          <span class="nav-icon">🖼️</span>
+          <span class="nav-label">相册</span>
+        </div>
+        <div class="nav-item">
+          <span class="nav-icon">👤</span>
+          <span class="nav-label">我的</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /screen -->
+</div><!-- /phone -->
+
+<script>
+  // ── Global style state ──────────────────────────────
+  const STYLES = {
+    '甜妹风': { icon:'🌸', model:'对齐粉色叠层，头再歪一点', shooter:'镜头低5cm，对焦眼睛' },
+    '清冷风': { icon:'🌊', model:'挺背收颌，眼神放空',       shooter:'平视角度，留天空背景' },
+    '复古风': { icon:'🎞️', model:'侧身45度，手轻搭腰间',     shooter:'逆光拍摄，微欠身低角' },
+    '氛围感': { icon:'✨', model:'低头或侧脸，营造神秘感',    shooter:'散景光晕，背景虚化' },
+    '轻运动': { icon:'🌿', model:'双手自然摆动，面带微笑',    shooter:'稍高角度，抓拍动态' },
+    '度假风': { icon:'☀️', model:'举手遮阳，慵懒侧靠',        shooter:'仰拍增高，天空留白' },
+  };
+  let currentStyle = '甜妹风'; // default
+
+  function applyStyleToCamera() {
+    const s = STYLES[currentStyle] || STYLES['甜妹风'];
+    document.getElementById('cam-style-badge').textContent = s.icon + ' ' + currentStyle;
+    document.getElementById('cam-model-tip').textContent = s.model;
+    document.getElementById('cam-shooter-tip').textContent = s.shooter;
+    document.getElementById('result-style-name').textContent = currentStyle;
+  }
+
+  // ── Navigation ──────────────────────────────────────
+  function goTo(screenId) {
+    document.querySelectorAll('.app-screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-' + screenId).classList.add('active');
+    if (screenId === 'camera') {
+      applyStyleToCamera();
+      startCamera();
+    }
+    if (screenId === 'style') {
+      // 进入风格页时，把当前已选风格同步高亮
+      pendingStyle = currentStyle;
+      document.querySelectorAll('.style-item').forEach(i => {
+        i.classList.toggle('active', i.dataset.name === currentStyle);
+      });
+      const btn = document.getElementById('confirm-style-btn');
+      if (btn) btn.textContent = '✓ 确认「' + currentStyle + '」开始拍摄';
+    }
+  }
+
+  // ── Style selection (style screen) ─────────────────
+  let pendingStyle = currentStyle;
+
+  function pickStyle(item) {
+    document.querySelectorAll('.style-item').forEach(i => i.classList.remove('active'));
+    item.classList.add('active');
+    pendingStyle = item.dataset.name;
+    // Update confirm button label
+    const btn = document.getElementById('confirm-style-btn');
+    if (btn) btn.textContent = '✓ 确认「' + pendingStyle + '」开始拍摄';
+  }
+
+  function confirmStyle() {
+    currentStyle = pendingStyle;
+    // Sync home style cards
+    document.querySelectorAll('.style-card').forEach(c => {
+      c.classList.toggle('selected', c.dataset.name === currentStyle);
+    });
+    goTo('camera');
+  }
+
+  // ── Style selection (home cards) ───────────────────
+  function selectStyleHome(card, name) {
+    currentStyle = name;
+    pendingStyle = name;
+    document.querySelectorAll('.style-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+    // Sync style screen
+    document.querySelectorAll('.style-item').forEach(i => {
+      i.classList.toggle('active', i.dataset.name === name);
+    });
+  }
+
+  // ── Multi-photo upload ──────────────────────────────
+  function addPhotos(input, gridId, countId) {
+    const files = Array.from(input.files);
+    const grid = document.getElementById(gridId);
+    const countEl = document.getElementById(countId);
+    let current = grid.querySelectorAll('.mu-thumb-wrap').length;
+
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const wrap = document.createElement('div');
+        wrap.className = 'mu-thumb-wrap';
+        const img = document.createElement('img');
+        img.src = e.target.result;
+        const del = document.createElement('div');
+        del.className = 'mu-del';
+        del.textContent = '×';
+        del.onclick = function() {
+          wrap.remove();
+          const c = grid.querySelectorAll('.mu-thumb-wrap').length;
+          countEl.textContent = '已上传 ' + c + ' 张';
+        };
+        wrap.appendChild(img);
+        wrap.appendChild(del);
+        // Insert before the add button label
+        const addBtn = grid.querySelector('.mu-add-btn');
+        grid.insertBefore(wrap, addBtn);
+        current++;
+        countEl.textContent = '已上传 ' + grid.querySelectorAll('.mu-thumb-wrap').length + ' 张';
+      };
+      reader.readAsDataURL(file);
+    });
+    input.value = ''; // reset so same files can be added again
+  }
+
+  // ── Camera ──────────────────────────────────────────
+  let camStream = null;
+  let facingMode = 'user';
+  let usingUploadMode = false;
+  let permissionAsked = false; // 每次进入相机页重置
+
+  async function startCamera() {
+    const video = document.getElementById('cam-video');
+    const fallback = document.getElementById('cam-fallback');
+    const overlay = document.querySelector('.pose-overlay');
+    const modal = document.getElementById('cam-permission-modal');
+    usingUploadMode = false;
+    permissionAsked = false;
+
+    // 重置界面
+    fallback.style.display = 'none';
+    video.style.opacity = '0';
+    overlay.style.display = 'none';
+    document.getElementById('cam-upload-preview').style.display = 'none';
+    if (camStream) { camStream.getTracks().forEach(t => t.stop()); camStream = null; }
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      showFallback(); return;
+    }
+
+    // 先查询当前权限状态，无需弹窗就能判断
+    try {
+      const perm = await navigator.permissions.query({ name: 'camera' });
+      if (perm.state === 'granted') {
+        // 已有权限，直接开启
+        await doStartCamera();
+        return;
+      } else if (perm.state === 'denied') {
+        // 已永久拒绝，直接显示引导页
+        showFallback(); return;
+      }
+    } catch(e) {
+      // 浏览器不支持 permissions API，走弹窗流程
+    }
+
+    // 首次请求：弹出自定义弹窗
+    modal.style.display = 'flex';
+  }
+
+  async function grantCameraPermission() {
+    const modal = document.getElementById('cam-permission-modal');
+    modal.style.display = 'none';
+    await doStartCamera();
+  }
+
+  async function doStartCamera() {
+    const video = document.getElementById('cam-video');
+    const overlay = document.querySelector('.pose-overlay');
+
+    try {
+      let stream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: { ideal: facingMode } },
+          audio: false
+        });
+      } catch(e1) {
+        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+      }
+
+      camStream = stream;
+
+      // iOS 关键：先 srcObject 赋值，再等 loadedmetadata，不能用 display:none
+      video.srcObject = stream;
+      video.setAttribute('playsinline', '');
+      video.setAttribute('webkit-playsinline', '');
+      video.muted = true;
+
+      await new Promise((resolve) => {
+        video.onloadedmetadata = () => {
+          video.play().then(resolve).catch(resolve);
+        };
+        setTimeout(resolve, 3000); // 最多等 3 秒
+      });
+
+      // 用 opacity 显示，不用 display（iOS Safari 黑屏的根源）
+      video.style.opacity = '1';
+      video.style.transform = facingMode === 'user' ? 'scaleX(-1)' : 'scaleX(1)';
+      document.getElementById('recog-label').textContent = 'AI 识别中';
+      overlay.style.display = 'block';
+
+    } catch(e) {
+      showFallback();
+    }
+  }
+
+  function showFallback() {
+    usingUploadMode = false;
+    const fallback = document.getElementById('cam-fallback');
+    fallback.style.display = 'flex';
+    document.getElementById('cam-video').style.opacity = '0';
+    document.getElementById('cam-upload-preview').style.display = 'none';
+    document.querySelector('.pose-overlay').style.display = 'none';
+    document.getElementById('recog-label').textContent = '等待开启';
+  }
+
+  function stopCamera() {
+    if (camStream) { camStream.getTracks().forEach(t => t.stop()); camStream = null; }
+  }
+
+  function flipCamera() {
+    if (usingUploadMode) return;
+    facingMode = facingMode === 'user' ? 'environment' : 'user';
+    startCamera();
+  }
+
+  // ── Shutter ──────────────────────────────────────────
+  function takePhoto() {
+    const flash = document.getElementById('flash');
+    const video = document.getElementById('cam-video');
+    const canvas = document.getElementById('cam-canvas');
+    const uploadPreview = document.getElementById('cam-upload-preview');
+
+    flash.classList.add('flash');
+
+    let dataUrl = null;
+
+    if (!usingUploadMode && video.srcObject && video.videoWidth > 0) {
+      // Capture from live video
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      const ctx = canvas.getContext('2d');
+      if (facingMode === 'user') { ctx.translate(canvas.width, 0); ctx.scale(-1, 1); }
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+    } else if (uploadPreview.src && uploadPreview.style.display !== 'none') {
+      // Use uploaded photo
+      dataUrl = uploadPreview.src;
+    }
+
+    if (dataUrl) {
+      const img = document.getElementById('result-img');
+      const placeholder = document.getElementById('result-placeholder');
+      img.src = dataUrl;
+      img.style.display = 'block';
+      if (placeholder) placeholder.style.display = 'none';
+    }
+
+    setTimeout(() => {
+      flash.classList.remove('flash');
+      stopCamera();
+      goTo('result');
+    }, 400);
+  }
+
+  // ── Animate scores on result entry ──────────────────
+  const observer = new MutationObserver(() => {
+    const result = document.getElementById('screen-result');
+    if (result.classList.contains('active')) {
+      document.querySelectorAll('.score-fill').forEach(el => {
+        const w = el.dataset.width;
+        el.style.width = '0';
+        setTimeout(() => { el.style.width = w; }, 100);
+      });
+    }
+  });
+  observer.observe(document.getElementById('screen-result'), { attributes: true, attributeFilter: ['class'] });
+
+  // ── Pose silhouette animation ────────────────────────
+  let poseAngle = 0;
+  setInterval(() => {
+    const cam = document.getElementById('screen-camera');
+    if (!cam.classList.contains('active')) return;
+    poseAngle = (poseAngle + 1) % 4;
+    const silhouette = cam.querySelector('.pose-silhouette');
+    if (silhouette) {
+      const t = ['translateX(-50%) rotate(-1deg)','translateX(-50%) rotate(0deg)','translateX(-50%) rotate(1deg)','translateX(-50%) rotate(0deg)'];
+      silhouette.style.transform = t[poseAngle];
+    }
+  }, 1000);
+</script>
+
+</body>
+</html>
