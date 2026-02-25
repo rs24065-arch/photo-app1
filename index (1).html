@@ -1,0 +1,1284 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI人像出片指导 - 完整版</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#FF9FB2',
+                        secondary: '#FFB6C1',
+                        accent: '#FF4757',
+                        light: '#FFF5F7',
+                        dark: '#333333'
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        /* 自定义样式 */
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background-color: #FFF5F7;
+        }
+        
+        .upload-area {
+            border: 2px dashed #FF9FB2;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .upload-area:hover, .upload-area.dragover {
+            border-color: #FF4757;
+            background-color: rgba(255, 159, 178, 0.05);
+        }
+        
+        .preview-item {
+            transition: all 0.2s ease;
+        }
+        
+        .preview-item:hover .delete-btn {
+            opacity: 1;
+        }
+        
+        .delete-btn {
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.3s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .success-indicator {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 20px;
+            height: 20px;
+            background: rgba(34, 197, 94, 0.9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 15;
+        }
+        
+        .success-indicator i {
+            color: white;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-md">
+        <!-- 应用标题 -->
+        <header class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-primary">AI人像出片指导</h1>
+            <p class="text-gray-600 mt-2">专为爱拍照的女生打造</p>
+        </header>
+
+        <!-- 主要内容 -->
+        <main>
+            <!-- 风格选择 -->
+            <section id="style-selection" class="mb-8">
+                <h2 class="text-xl font-bold text-primary mb-4">选择拍照风格</h2>
+                
+                <div class="grid grid-cols-3 gap-4">
+                    <!-- 甜妹风 -->
+                    <div class="style-card bg-white rounded-lg overflow-hidden shadow-md cursor-pointer hover:shadow-lg transition-shadow" data-style="sweet">
+                        <img src="https://p26-doubao-search-sign.byteimg.com/pgc-image/1521282916675153cdd334e~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1787498371&x-signature=asVO0BAl0AOEeF2jAAWDxFGbyqo%3D" alt="甜妹风" class="w-full h-32 object-cover">
+                        <div class="p-3">
+                            <h3 class="font-bold text-primary">甜妹风</h3>
+                        </div>
+                    </div>
+                    
+                    <!-- 清冷风 -->
+                    <div class="style-card bg-white rounded-lg overflow-hidden shadow-md cursor-pointer hover:shadow-lg transition-shadow" data-style="elegant">
+                        <img src="https://p11-doubao-search-sign.byteimg.com/tos-cn-i-qvj2lq49k0/cb8e5c04ce804db891b4a06634914e3e~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1787498371&x-signature=cxpRNGDpFzrZ7hLW16uWpBs9O0Q%3D" alt="清冷风" class="w-full h-32 object-cover">
+                        <div class="p-3">
+                            <h3 class="font-bold text-primary">清冷风</h3>
+                        </div>
+                    </div>
+                    
+                    <!-- 复古风 -->
+                    <div class="style-card bg-white rounded-lg overflow-hidden shadow-md cursor-pointer hover:shadow-lg transition-shadow" data-style="vintage">
+                        <img src="https://p11-doubao-search-sign.byteimg.com/labis/cfc2540d418019582760771b667897bf~tplv-be4g95zd3a-image.jpeg?lk3s=feb11e32&x-expires=1787498371&x-signature=IXS4Fxa7rpYN6%2FB93GZYPNKmoVM%3D" alt="复古风" class="w-full h-32 object-cover">
+                        <div class="p-3">
+                            <h3 class="font-bold text-primary">复古风</h3>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- 个人照片上传 -->
+            <section id="personal-upload" class="mb-8 hidden">
+                <h2 class="text-xl font-bold text-primary mb-4">上传您的照片</h2>
+                
+                <div class="bg-white rounded-lg p-6 shadow-md">
+                    <p class="text-gray-600 mb-4">上传您的照片，让AI更好地了解您的面部轮廓和身形特点</p>
+                    
+                    <!-- 上传区域 -->
+                    <div id="upload-area" class="upload-area p-8 text-center mb-4">
+                        <i class="fa fa-cloud-upload text-4xl text-primary mb-2"></i>
+                        <p class="text-gray-500 mb-3">点击或拖拽照片到此处上传</p>
+                        <input type="file" id="file-input" class="hidden" accept="image/*" multiple>
+                        <button id="upload-btn" class="bg-primary hover:bg-secondary text-white font-bold py-2 px-6 rounded-full transition-colors">
+                            选择照片
+                        </button>
+                        <p class="text-xs text-gray-400 mt-2">支持多张照片，JPG/PNG格式</p>
+                    </div>
+                    
+                    <!-- 预览区域 -->
+                    <div id="preview-container" class="hidden">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-bold text-primary">预览</h3>
+                            <button id="retry-btn" class="text-sm bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full px-3 py-1 transition-colors">
+                                <i class="fa fa-refresh mr-1"></i> 重新选择
+                            </button>
+                        </div>
+                        
+                        <div id="previews" class="grid grid-cols-2 gap-3"></div>
+                        
+                        <div class="mt-4 text-center">
+                            <div class="flex justify-center space-x-4">
+                                <button id="continue-upload-btn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-6 rounded-full transition-colors">
+                                    <i class="fa fa-plus mr-2"></i> 继续添加
+                                </button>
+                                <button id="next-btn" class="bg-primary hover:bg-secondary text-white font-bold py-2 px-6 rounded-full transition-colors">
+                                    下一步
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- 风格参考上传 -->
+            <section id="style-reference-upload" class="mb-8 hidden">
+                <h2 class="text-xl font-bold text-primary mb-4">上传风格参考</h2>
+                
+                <div class="bg-white rounded-lg p-6 shadow-md">
+                    <p class="text-gray-600 mb-4">上传您喜欢的照片风格作为参考，让AI为您提供更精准的指导</p>
+                    
+                    <!-- 上传区域 -->
+                    <div id="style-upload-area" class="upload-area p-8 text-center mb-4">
+                        <i class="fa fa-picture-o text-4xl text-primary mb-2"></i>
+                        <p class="text-gray-500 mb-3">点击或拖拽参考照片到此处上传</p>
+                        <input type="file" id="style-file-input" class="hidden" accept="image/*" multiple>
+                        <button id="style-upload-btn" class="bg-primary hover:bg-secondary text-white font-bold py-2 px-6 rounded-full transition-colors">
+                            选择照片
+                        </button>
+                        <p class="text-xs text-gray-400 mt-2">支持多张照片，JPG/PNG格式</p>
+                    </div>
+                    
+                    <!-- 预览区域 -->
+                    <div id="style-preview-container" class="hidden">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-bold text-primary">预览</h3>
+                            <button id="style-retry-btn" class="text-sm bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full px-3 py-1 transition-colors">
+                                <i class="fa fa-refresh mr-1"></i> 重新选择
+                            </button>
+                        </div>
+                        
+                        <div id="style-previews" class="grid grid-cols-2 gap-3"></div>
+                        
+                        <div class="mt-4 text-center">
+                            <div class="flex justify-center space-x-4">
+                                <button id="continue-style-upload-btn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-6 rounded-full transition-colors">
+                                    <i class="fa fa-plus mr-2"></i> 继续添加
+                                </button>
+                                <button id="generate-guide-btn" class="bg-primary hover:bg-secondary text-white font-bold py-2 px-6 rounded-full transition-colors">
+                                    生成拍照指导
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- 拍照指导界面 -->
+            <section id="photo-guide" class="mb-8 hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-xl font-bold text-primary">拍照指导</h2>
+                    <button id="back-to-upload" class="text-sm bg-gray-100 hover:bg-gray-200 text-gray-600 rounded-full px-3 py-1 transition-colors">
+                        <i class="fa fa-arrow-left mr-1"></i> 返回
+                    </button>
+                </div>
+                
+                <!-- 风格信息 -->
+                <div class="bg-white rounded-lg p-4 shadow-md mb-6">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 rounded-full bg-primary flex items-center justify-center text-white font-bold text-lg">
+                            <span id="style-icon">甜</span>
+                        </div>
+                        <div class="ml-4">
+                            <h3 id="style-name" class="font-bold text-lg text-primary">甜妹风</h3>
+                            <p id="style-description" class="text-gray-600 text-sm">活泼可爱，笑容甜美，姿势灵动</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 实时画面 -->
+                <div class="bg-white rounded-lg p-4 shadow-md mb-6">
+                    <h3 class="font-bold text-primary mb-3">实时画面</h3>
+                    <div class="relative">
+                        <div id="camera-placeholder" class="w-full h-64 bg-gray-100 rounded-lg flex items-center justify-center">
+                            <div class="text-center">
+                                <i class="fa fa-camera text-4xl text-gray-400 mb-2"></i>
+                                <p class="text-gray-500">点击下方按钮开启相机</p>
+                            </div>
+                        </div>
+                        <video id="video" class="w-full h-64 object-cover rounded-lg hidden"></video>
+                        <canvas id="canvas" class="hidden"></canvas>
+                        
+                        <!-- 姿势引导覆盖层 -->
+                        <div id="pose-guide-overlay" class="absolute inset-0 pointer-events-none hidden">
+                            <div class="absolute inset-0 flex items-center justify-center">
+                                <div class="bg-white bg-opacity-80 rounded-lg p-4 max-w-xs text-center">
+                                    <h4 class="font-bold text-primary mb-2">姿势引导</h4>
+                                    <p id="pose-instruction" class="text-sm text-gray-700">请将双手放在腰间，微微侧身</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-4 flex justify-center space-x-4">
+                        <button id="start-camera-btn" class="bg-primary hover:bg-secondary text-white font-bold py-2 px-6 rounded-full transition-colors">
+                            <i class="fa fa-video-camera mr-2"></i> 开启相机
+                        </button>
+                        <button id="capture-btn" class="bg-accent hover:bg-red-600 text-white font-bold py-2 px-6 rounded-full transition-colors hidden">
+                            <i class="fa fa-camera mr-2"></i> 拍照
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 双角色指导 -->
+                <div class="bg-white rounded-lg p-4 shadow-md mb-6">
+                    <h3 class="font-bold text-primary mb-3">拍照指导</h3>
+                    
+                    <div class="flex space-x-4 mb-4">
+                        <!-- 摄影师角色 -->
+                        <div class="flex-1 bg-light rounded-lg p-3">
+                            <div class="flex items-center mb-2">
+                                <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white">
+                                    <i class="fa fa-user"></i>
+                                </div>
+                                <span class="ml-2 font-bold text-blue-500">摄影师</span>
+                            </div>
+                            <div id="photographer-tips" class="text-sm text-gray-700">
+                                <p>• 建议使用45°俯拍角度</p>
+                                <p>• 让模特自然微笑</p>
+                                <p>• 注意背景简洁</p>
+                            </div>
+                        </div>
+                        
+                        <!-- 模特角色 -->
+                        <div class="flex-1 bg-light rounded-lg p-3">
+                            <div class="flex items-center mb-2">
+                                <div class="w-8 h-8 rounded-full bg-pink-500 flex items-center justify-center text-white">
+                                    <i class="fa fa-user"></i>
+                                </div>
+                                <span class="ml-2 font-bold text-pink-500">模特</span>
+                            </div>
+                            <div id="model-tips" class="text-sm text-gray-700">
+                                <p>• 肩膀放松，自然下垂</p>
+                                <p>• 眼睛看向镜头上方</p>
+                                <p>• 笑容保持自然</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 切换按钮 -->
+                    <div class="text-center">
+                        <button id="switch-role-btn" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-2 px-6 rounded-full transition-colors">
+                            <i class="fa fa-exchange mr-2"></i> 切换指导
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 拍摄历史 -->
+                <div class="bg-white rounded-lg p-4 shadow-md">
+                    <h3 class="font-bold text-primary mb-3">拍摄历史</h3>
+                    <div id="history-container" class="grid grid-cols-3 gap-3">
+                        <p class="text-gray-500 text-center col-span-3">暂无拍摄记录</p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- 成功提示 -->
+            <div id="success-message" class="hidden fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg">
+                <div class="flex items-center">
+                    <i class="fa fa-check-circle mr-2"></i>
+                    <span>照片上传成功！</span>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // 全局变量
+        let selectedStyle = '';
+        let uploadedFiles = [];
+        let styleReferenceFiles = [];
+        let currentRole = 'photographer'; // 'photographer' or 'model'
+        let capturedImages = [];
+        let poseInstructions = [];
+        let currentPoseIndex = 0;
+        
+        // DOM元素
+        const styleCards = document.querySelectorAll('.style-card');
+        const styleSelection = document.getElementById('style-selection');
+        const personalUpload = document.getElementById('personal-upload');
+        const uploadArea = document.getElementById('upload-area');
+        const fileInput = document.getElementById('file-input');
+        const uploadBtn = document.getElementById('upload-btn');
+        const retryBtn = document.getElementById('retry-btn');
+        const previewContainer = document.getElementById('preview-container');
+        const previews = document.getElementById('previews');
+        const nextBtn = document.getElementById('next-btn');
+        const successMessage = document.getElementById('success-message');
+        
+        // 风格参考上传元素
+        const styleReferenceUpload = document.getElementById('style-reference-upload');
+        const styleUploadArea = document.getElementById('style-upload-area');
+        const styleFileInput = document.getElementById('style-file-input');
+        const styleUploadBtn = document.getElementById('style-upload-btn');
+        const styleRetryBtn = document.getElementById('style-retry-btn');
+        const stylePreviewContainer = document.getElementById('style-preview-container');
+        const stylePreviews = document.getElementById('style-previews');
+        const generateGuideBtn = document.getElementById('generate-guide-btn');
+        
+        // 拍照指导元素
+        const photoGuide = document.getElementById('photo-guide');
+        const backToUploadBtn = document.getElementById('back-to-upload');
+        const styleIcon = document.getElementById('style-icon');
+        const styleName = document.getElementById('style-name');
+        const styleDescription = document.getElementById('style-description');
+        const cameraPlaceholder = document.getElementById('camera-placeholder');
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const poseGuideOverlay = document.getElementById('pose-guide-overlay');
+        const poseInstruction = document.getElementById('pose-instruction');
+        const startCameraBtn = document.getElementById('start-camera-btn');
+        const captureBtn = document.getElementById('capture-btn');
+        const photographerTips = document.getElementById('photographer-tips');
+        const modelTips = document.getElementById('model-tips');
+        const switchRoleBtn = document.getElementById('switch-role-btn');
+        const historyContainer = document.getElementById('history-container');
+        
+        // 初始化事件监听
+        function initEvents() {
+            // 继续添加按钮事件
+            const continueUploadBtn = document.getElementById('continue-upload-btn');
+            const continueStyleUploadBtn = document.getElementById('continue-style-upload-btn');
+            
+            continueUploadBtn.addEventListener('click', () => {
+                fileInput.click();
+            });
+            
+            continueStyleUploadBtn.addEventListener('click', () => {
+                styleFileInput.click();
+            });
+            // 风格选择
+            styleCards.forEach(card => {
+                card.addEventListener('click', () => {
+                    selectedStyle = card.dataset.style;
+                    styleSelection.classList.add('hidden');
+                    personalUpload.classList.remove('hidden');
+                });
+            });
+            
+            // 上传按钮点击
+            uploadBtn.addEventListener('click', () => {
+                fileInput.click();
+            });
+            
+            // 重试按钮点击
+            retryBtn.addEventListener('click', () => {
+                // 清空预览
+                previews.innerHTML = '';
+                previewContainer.classList.add('hidden');
+                uploadArea.classList.remove('hidden');
+                
+                // 清空文件输入
+                fileInput.value = '';
+                
+                // 清空上传的文件
+                uploadedFiles = [];
+            });
+            
+            // 下一步按钮点击
+            nextBtn.addEventListener('click', () => {
+                personalUpload.classList.add('hidden');
+                styleReferenceUpload.classList.remove('hidden');
+            });
+            
+            // 风格参考上传按钮点击
+            styleUploadBtn.addEventListener('click', () => {
+                styleFileInput.click();
+            });
+            
+            // 风格参考重试按钮点击
+            styleRetryBtn.addEventListener('click', () => {
+                stylePreviews.innerHTML = '';
+                stylePreviewContainer.classList.add('hidden');
+                styleUploadArea.classList.remove('hidden');
+                styleFileInput.value = '';
+                styleReferenceFiles = [];
+            });
+            
+            // 生成指导按钮点击
+            generateGuideBtn.addEventListener('click', () => {
+                generatePhotoGuide();
+            });
+            
+            // 返回按钮点击
+            backToUploadBtn.addEventListener('click', () => {
+                photoGuide.classList.add('hidden');
+                styleReferenceUpload.classList.remove('hidden');
+                stopCamera();
+            });
+            
+            // 开启相机按钮点击
+            startCameraBtn.addEventListener('click', () => {
+                startCamera();
+            });
+            
+            // 拍照按钮点击
+            captureBtn.addEventListener('click', () => {
+                capturePhoto();
+            });
+            
+            // 切换角色按钮点击
+            switchRoleBtn.addEventListener('click', () => {
+                switchRole();
+            });
+            
+            // 文件选择变化
+            fileInput.addEventListener('change', handleFiles);
+            
+            // 拖拽上传
+            setupDragAndDrop();
+            
+            // 风格参考文件选择变化
+            styleFileInput.addEventListener('change', handleStyleFiles);
+            
+            // 设置风格参考拖拽上传
+            setupStyleDragAndDrop();
+        }
+        
+        // 处理文件上传
+        function handleFiles(e) {
+            const files = e.target.files;
+            
+            if (!files || files.length === 0) {
+                return;
+            }
+            
+            // 显示预览容器
+            uploadArea.classList.add('hidden');
+            previewContainer.classList.remove('hidden');
+            
+            // 处理每个文件
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                
+                // 检查文件类型
+                if (!file.type.startsWith('image/')) {
+                    continue;
+                }
+                
+                // 创建预览元素
+                const previewItem = document.createElement('div');
+                previewItem.className = 'preview-item relative bg-gray-50 rounded-lg overflow-hidden';
+                previewItem.style.height = '120px';
+                
+                // 直接显示图片，不使用加载指示器
+                previewItem.innerHTML = `
+                    <img class="w-full h-full object-cover" alt="预览">
+                    <button class="delete-btn absolute top-1 right-1 bg-white rounded-full p-1 shadow-md z-20">
+                        <i class="fa fa-times text-red-500"></i>
+                    </button>
+                `;
+                
+                previews.appendChild(previewItem);
+                
+                // 获取元素引用
+                const img = previewItem.querySelector('img');
+                const deleteBtn = previewItem.querySelector('.delete-btn');
+                
+                // 使用URL.createObjectURL创建图片URL
+                const objectUrl = URL.createObjectURL(file);
+                
+                // 存储文件信息
+                uploadedFiles.push({
+                    file: file,
+                    url: objectUrl
+                });
+                
+                // 图片加载完成后显示
+                img.onload = function() {
+                    // 立即隐藏加载指示器
+                    loadingDiv.style.display = 'none';
+                    
+                    // 立即显示图片
+                    img.style.opacity = '1';
+                    
+                    // 添加成功指示器
+                    const successIndicator = document.createElement('div');
+                    successIndicator.className = 'success-indicator fade-in';
+                    successIndicator.innerHTML = '<i class="fa fa-check"></i>';
+                    previewItem.appendChild(successIndicator);
+                    
+                    // 显示成功消息
+                    if (i === files.length - 1) {
+                        showSuccessMessage();
+                    }
+                };
+                
+                // 图片加载失败处理
+                img.onerror = function() {
+                    previewItem.innerHTML = `
+                        <div class="absolute inset-0 flex items-center justify-center bg-gray-100">
+                            <div class="text-center text-red-500">
+                                <i class="fa fa-exclamation-circle text-2xl"></i>
+                                <p class="text-xs mt-1">加载失败</p>
+                            </div>
+                        </div>
+                        <button class="delete-btn absolute top-1 right-1 bg-white rounded-full p-1 shadow-md z-20">
+                            <i class="fa fa-times text-red-500"></i>
+                        </button>
+                    `;
+                    
+                    // 重新绑定删除按钮事件
+                    const newDeleteBtn = previewItem.querySelector('.delete-btn');
+                    newDeleteBtn.onclick = deleteBtn.onclick;
+                };
+                
+                // 设置图片源
+                img.src = objectUrl;
+                
+                // 删除按钮点击事件
+                deleteBtn.onclick = function() {
+                    // 找到文件索引
+                    const index = uploadedFiles.findIndex(item => item.url === objectUrl);
+                    if (index !== -1) {
+                        // 释放URL对象
+                        URL.revokeObjectURL(uploadedFiles[index].url);
+                        
+                        // 从数组中移除
+                        uploadedFiles.splice(index, 1);
+                    }
+                    
+                    // 移除预览项
+                    previewItem.style.opacity = '0';
+                    previewItem.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        previewItem.remove();
+                        
+                        // 如果没有预览项了，显示上传区域
+                        if (previews.children.length === 0) {
+                            previewContainer.classList.add('hidden');
+                            uploadArea.classList.remove('hidden');
+                        }
+                    }, 300);
+                };
+            }
+        }
+        
+        // 设置拖拽上传
+        function setupDragAndDrop() {
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, preventDefaults, false);
+            });
+            
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            
+            ['dragenter', 'dragover'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, highlight, false);
+            });
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, unhighlight, false);
+            });
+            
+            function highlight() {
+                uploadArea.classList.add('dragover');
+            }
+            
+            function unhighlight() {
+                uploadArea.classList.remove('dragover');
+            }
+            
+            uploadArea.addEventListener('drop', handleDrop, false);
+            
+            function handleDrop(e) {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                
+                // 设置文件到输入框
+                fileInput.files = files;
+                
+                // 触发change事件
+                const event = new Event('change');
+                fileInput.dispatchEvent(event);
+            }
+        }
+        
+        // 处理风格参考文件上传
+        function handleStyleFiles(e) {
+            const files = e.target.files;
+            
+            if (!files || files.length === 0) {
+                return;
+            }
+            
+            styleUploadArea.classList.add('hidden');
+            stylePreviewContainer.classList.remove('hidden');
+            
+            for (let i = 0; i < files.length; i++) {
+                const file = files[i];
+                
+                if (!file.type.startsWith('image/')) {
+                    continue;
+                }
+                
+                const previewItem = document.createElement('div');
+                previewItem.className = 'preview-item relative bg-gray-50 rounded-lg overflow-hidden';
+                previewItem.style.height = '120px';
+                
+                previewItem.innerHTML = `
+                    <img class="w-full h-full object-cover" alt="风格参考">
+                    <button class="delete-btn absolute top-1 right-1 bg-white rounded-full p-1 shadow-md z-20">
+                        <i class="fa fa-times text-red-500"></i>
+                    </button>
+                `;
+                
+                stylePreviews.appendChild(previewItem);
+                
+                const img = previewItem.querySelector('img');
+                const deleteBtn = previewItem.querySelector('.delete-btn');
+                
+                const objectUrl = URL.createObjectURL(file);
+                
+                styleReferenceFiles.push({
+                    file: file,
+                    url: objectUrl
+                });
+                
+                img.onload = function() {
+                    loadingDiv.style.opacity = '0';
+                    setTimeout(() => {
+                        loadingDiv.style.display = 'none';
+                    }, 200);
+                    
+                    setTimeout(() => {
+                        img.style.opacity = '1';
+                        
+                        setTimeout(() => {
+                            const successIndicator = document.createElement('div');
+                            successIndicator.className = 'success-indicator fade-in';
+                            successIndicator.innerHTML = '<i class="fa fa-check"></i>';
+                            previewItem.appendChild(successIndicator);
+                        }, 100);
+                    }, 100);
+                    
+                    if (i === files.length - 1) {
+                        setTimeout(() => {
+                            showSuccessMessage();
+                        }, 300);
+                    }
+                };
+                
+                img.onerror = function() {
+                    previewItem.innerHTML = `
+                        <div class="absolute inset-0 flex items-center justify-center bg-gray-100">
+                            <div class="text-center text-red-500">
+                                <i class="fa fa-exclamation-circle text-2xl"></i>
+                                <p class="text-xs mt-1">加载失败</p>
+                            </div>
+                        </div>
+                        <button class="delete-btn absolute top-1 right-1 bg-white rounded-full p-1 shadow-md z-20">
+                            <i class="fa fa-times text-red-500"></i>
+                        </button>
+                    `;
+                    
+                    // 重新绑定删除按钮事件
+                    const newDeleteBtn = previewItem.querySelector('.delete-btn');
+                    newDeleteBtn.onclick = deleteBtn.onclick;
+                };
+                
+                img.src = objectUrl;
+                
+                deleteBtn.onclick = function() {
+                    const index = styleReferenceFiles.findIndex(item => item.url === objectUrl);
+                    if (index !== -1) {
+                        URL.revokeObjectURL(styleReferenceFiles[index].url);
+                        styleReferenceFiles.splice(index, 1);
+                    }
+                    
+                    previewItem.style.opacity = '0';
+                    previewItem.style.transform = 'scale(0.95)';
+                    setTimeout(() => {
+                        previewItem.remove();
+                        
+                        if (stylePreviews.children.length === 0) {
+                            stylePreviewContainer.classList.add('hidden');
+                            styleUploadArea.classList.remove('hidden');
+                        }
+                    }, 300);
+                };
+            }
+        }
+        
+        // 设置风格参考拖拽上传
+        function setupStyleDragAndDrop() {
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                styleUploadArea.addEventListener(eventName, preventDefaults, false);
+            });
+            
+            ['dragenter', 'dragover'].forEach(eventName => {
+                styleUploadArea.addEventListener(eventName, () => {
+                    styleUploadArea.classList.add('dragover');
+                }, false);
+            });
+            
+            ['dragleave', 'drop'].forEach(eventName => {
+                styleUploadArea.addEventListener(eventName, () => {
+                    styleUploadArea.classList.remove('dragover');
+                }, false);
+            });
+            
+            styleUploadArea.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                
+                styleFileInput.files = files;
+                const event = new Event('change');
+                styleFileInput.dispatchEvent(event);
+            }, false);
+        }
+        
+        // 生成拍照指导
+        function generatePhotoGuide() {
+            // 显示AI分析中提示
+            showAIAnalyzing();
+            
+            // 模拟AI分析过程
+            setTimeout(() => {
+                styleReferenceUpload.classList.add('hidden');
+                photoGuide.classList.remove('hidden');
+                
+                // AI分析结果
+                const aiAnalysis = performAIAnalysis();
+                
+                // 设置风格信息
+                setStyleInfo(aiAnalysis);
+                
+                // 生成姿势指导
+                generatePoseInstructions(aiAnalysis);
+                
+                // 更新指导内容
+                updateGuideContent();
+                
+                // 清空拍摄历史
+                capturedImages = [];
+                updateHistoryDisplay();
+            }, 2000);
+        }
+        
+        // 显示AI分析中提示
+        function showAIAnalyzing() {
+            const analyzingDiv = document.createElement('div');
+            analyzingDiv.id = 'ai-analyzing';
+            analyzingDiv.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            analyzingDiv.innerHTML = `
+                <div class="bg-white rounded-lg p-8 text-center max-w-md">
+                    <div class="w-16 h-16 mx-auto mb-4 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                    <h3 class="text-xl font-bold text-primary mb-2">AI正在分析中...</h3>
+                    <p class="text-gray-600">正在分析您的面部特点、身形和参考照片的姿势...</p>
+                </div>
+            `;
+            document.body.appendChild(analyzingDiv);
+        }
+        
+        // 执行AI分析
+        function performAIAnalysis() {
+            // 移除分析中提示
+            const analyzingDiv = document.getElementById('ai-analyzing');
+            if (analyzingDiv) {
+                analyzingDiv.remove();
+            }
+            
+            // 模拟AI分析结果
+            const身形特点 = ['苗条纤细', '曲线优美', '高挑修长', '小巧玲珑', '比例协调'];
+            const面部特点 = ['五官精致', '大眼睛', '甜美的笑容', '瓜子脸', '皮肤白皙'];
+            const姿势建议 = ['适合侧身拍摄', '手部姿势很优雅', '笑容很有感染力', '眼神很有神', '身体线条优美'];
+            
+            return {
+                userFeatures: {
+                    body:身形特点[Math.floor(Math.random() * 身形特点.length)],
+                    face:面部特点[Math.floor(Math.random() * 面部特点.length)],
+                    strengths:姿势建议.slice(0, 2 + Math.floor(Math.random() * 3))
+                },
+                referenceAnalysis: {
+                    poses:姿势建议.slice(2),
+                    angles:['45°俯拍很适合您', '侧面拍摄更显气质', '特写镜头很上镜'],
+                    lighting:['柔和的自然光', '侧光营造立体感', '避免强光直射']
+                }
+            };
+        }
+        
+        // 设置风格信息
+        function setStyleInfo(aiAnalysis) {
+            const baseStyleInfo = {
+                sweet: {
+                    name: '甜妹风',
+                    description: '活泼可爱，笑容甜美，姿势灵动',
+                    icon: '甜',
+                    photographerTips: [
+                        '建议使用45°俯拍角度',
+                        '让模特自然微笑',
+                        '注意背景简洁明亮',
+                        '使用柔和的自然光',
+                        '拍摄特写时保持眼神交流'
+                    ],
+                    modelTips: [
+                        '肩膀放松，自然下垂',
+                        '眼睛看向镜头上方',
+                        '笑容保持自然甜美',
+                        '手势可以俏皮可爱',
+                        '身体微微倾斜更自然'
+                    ],
+                    poses: [
+                        '双手托腮，微微歪头',
+                        '单手比耶，笑容灿烂',
+                        '双手放在腰间，侧身站立',
+                        '自然行走，回眸一笑',
+                        '手捧脸颊，眼睛明亮'
+                    ]
+                },
+                elegant: {
+                    name: '清冷风',
+                    description: '气质优雅，表情淡然，构图简约',
+                    icon: '清',
+                    photographerTips: [
+                        '使用平拍或轻微仰拍',
+                        '背景选择简约干净',
+                        '光线要柔和均匀',
+                        '留白构图更显气质',
+                        '捕捉自然的瞬间'
+                    ],
+                    modelTips: [
+                        '肩膀打开，挺胸抬头',
+                        '表情淡然，眼神深邃',
+                        '动作缓慢优雅',
+                        '手势自然下垂',
+                        '保持身体线条流畅'
+                    ],
+                    poses: [
+                        '单手插兜，侧身站立',
+                        '背靠墙面，眼神望向远方',
+                        '自然垂眸，气质出众',
+                        '侧身而坐，手托下巴',
+                        '慢步行走，姿态优雅'
+                    ]
+                },
+                vintage: {
+                    name: '复古风',
+                    description: '怀旧复古，色彩温暖，质感细腻',
+                    icon: '复',
+                    photographerTips: [
+                        '使用暖色调滤镜',
+                        '寻找复古元素背景',
+                        '光线偏暖更有氛围',
+                        '适当使用道具增强主题',
+                        '构图可以稍微倾斜'
+                    ],
+                    modelTips: [
+                        '表情温柔有故事感',
+                        '动作可以稍微缓慢',
+                        '眼神可以带点忧郁',
+                        '手势可以轻触头发',
+                        '身体姿态优雅大方'
+                    ],
+                    poses: [
+                        '手捧复古道具，眼神温柔',
+                        '侧身依靠，望向窗外',
+                        '轻抚头发，表情柔和',
+                        '坐在复古家具上，姿态优雅',
+                        '手持鲜花，气质出众'
+                    ]
+                }
+            };
+            
+            const baseInfo = baseStyleInfo[selectedStyle] || baseStyleInfo.sweet;
+            
+            // 个性化描述
+            const personalizedDescription = `${baseInfo.description}。AI分析显示您${aiAnalysis.userFeatures.face}，${aiAnalysis.userFeatures.body}，非常适合这种风格！`;
+            
+            // 个性化摄影师指导
+            const personalizedPhotographerTips = [
+                ...baseInfo.photographerTips.slice(0, 3),
+                ...aiAnalysis.referenceAnalysis.angles,
+                ...aiAnalysis.referenceAnalysis.lighting
+            ];
+            
+            // 个性化模特指导
+            const personalizedModelTips = [
+                ...baseInfo.modelTips.slice(0, 2),
+                ...aiAnalysis.userFeatures.strengths.map(strength => `您的${strength}，可以多尝试`),
+                '根据AI分析，建议突出您的优点'
+            ];
+            
+            styleIcon.textContent = baseInfo.icon;
+            styleName.textContent = baseInfo.name;
+            styleDescription.textContent = personalizedDescription;
+            
+            photographerTips.innerHTML = personalizedPhotographerTips.map(tip => `<p>• ${tip}</p>`).join('');
+            modelTips.innerHTML = personalizedModelTips.map(tip => `<p>• ${tip}</p>`).join('');
+            
+            // 保存个性化信息
+            window.personalizedInfo = {
+                photographerTips: personalizedPhotographerTips,
+                modelTips: personalizedModelTips,
+                basePoses: baseInfo.poses,
+                aiAnalysis: aiAnalysis
+            };
+        }
+        
+        // 生成姿势指导
+        function generatePoseInstructions(aiAnalysis) {
+            const personalizedInfo = window.personalizedInfo;
+            if (!personalizedInfo) return;
+            
+            // 基于AI分析生成个性化姿势
+            const personalizedPoses = personalizedInfo.basePoses.map((pose, index) => {
+                // 根据用户特点调整姿势描述
+                if (aiAnalysis.userFeatures.strengths.includes('笑容很有感染力')) {
+                    pose = pose.replace('表情', '笑容');
+                }
+                if (aiAnalysis.userFeatures.strengths.includes('眼神很有神')) {
+                    pose += '，保持眼神明亮';
+                }
+                return pose;
+            });
+            
+            // 添加参考照片分析的姿势建议
+            personalizedPoses.push(...aiAnalysis.referenceAnalysis.poses.map(pose => 
+                `参考照片中${pose}，您可以尝试类似动作`
+            ));
+            
+            poseInstructions = personalizedPoses;
+            currentPoseIndex = 0;
+            
+            if (poseInstructions.length > 0) {
+                poseInstruction.textContent = poseInstructions[0];
+            }
+        }
+        
+        // 更新指导内容
+        function updateGuideContent() {
+            // 切换显示不同角色的指导
+            if (currentRole === 'photographer') {
+                photographerTips.style.display = 'block';
+                modelTips.style.display = 'none';
+            } else {
+                photographerTips.style.display = 'none';
+                modelTips.style.display = 'block';
+            }
+        }
+        
+        // 切换角色
+        function switchRole() {
+            currentRole = currentRole === 'photographer' ? 'model' : 'photographer';
+            updateGuideContent();
+            
+            // 如果切换到摄影师角色，开始实时分析
+            if (currentRole === 'photographer' && video.srcObject) {
+                updateRealTimePhotographerGuide();
+            }
+        }
+        
+        // 开始相机
+        function startCamera() {
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                // 显示加载提示
+                cameraPlaceholder.innerHTML = `
+                    <div class="text-center">
+                        <div class="w-12 h-12 mx-auto mb-2 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+                        <p class="text-gray-500">正在开启相机...</p>
+                    </div>
+                `;
+                
+                navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: 'user' },
+                    audio: false
+                })
+                    .then(stream => {
+                        // 设置视频源
+                        video.srcObject = stream;
+                        
+                        // 等待视频元数据加载
+                        video.onloadedmetadata = function() {
+                            // 显示视频元素
+                            video.classList.remove('hidden');
+                            video.play();
+                            
+                            // 隐藏占位符和开始按钮
+                            cameraPlaceholder.classList.add('hidden');
+                            startCameraBtn.classList.add('hidden');
+                            
+                            // 显示拍照按钮和姿势引导
+                            captureBtn.classList.remove('hidden');
+                            poseGuideOverlay.classList.remove('hidden');
+                            
+                            // 开始姿势引导
+                            startPoseGuide();
+                            
+                            // 开始实时分析
+                            startRealTimeAnalysis();
+                        };
+                        
+                        video.onerror = function() {
+                            cameraPlaceholder.innerHTML = `
+                                <div class="text-center">
+                                    <i class="fa fa-exclamation-circle text-4xl text-red-500 mb-2"></i>
+                                    <p class="text-gray-500">相机启动失败</p>
+                                </div>
+                            `;
+                            startCameraBtn.classList.remove('hidden');
+                        };
+                    })
+                    .catch(err => {
+                        console.error('无法访问摄像头:', err);
+                        cameraPlaceholder.innerHTML = `
+                            <div class="text-center">
+                                <i class="fa fa-exclamation-circle text-4xl text-red-500 mb-2"></i>
+                                <p class="text-gray-500">无法访问摄像头</p>
+                                <p class="text-sm text-gray-400 mt-1">请检查权限设置</p>
+                            </div>
+                        `;
+                        startCameraBtn.classList.remove('hidden');
+                    });
+            } else {
+                alert('您的浏览器不支持摄像头功能。');
+            }
+        }
+        
+        // 开始实时分析
+        function startRealTimeAnalysis() {
+            // 模拟实时分析，定期更新指导内容
+            const analysisInterval = setInterval(() => {
+                if (video.srcObject && currentRole === 'photographer') {
+                    updateRealTimePhotographerGuide();
+                }
+            }, 5000);
+            
+            // 保存定时器ID以便清理
+            window.analysisInterval = analysisInterval;
+        }
+        
+        // 更新实时摄影师指导
+        function updateRealTimePhotographerGuide() {
+            const personalizedInfo = window.personalizedInfo;
+            if (!personalizedInfo) return;
+            
+            // 随机选择一些指导提示
+            const tips = personalizedInfo.photographerTips;
+            const randomTips = tips.sort(() => 0.5 - Math.random()).slice(0, 3);
+            
+            photographerTips.innerHTML = randomTips.map(tip => `<p>• ${tip}</p>`).join('');
+        }
+        
+        // 停止相机
+        function stopCamera() {
+            // 清理实时分析定时器
+            if (window.analysisInterval) {
+                clearInterval(window.analysisInterval);
+                window.analysisInterval = null;
+            }
+            
+            if (video.srcObject) {
+                const tracks = video.srcObject.getTracks();
+                tracks.forEach(track => track.stop());
+                video.srcObject = null;
+            }
+            
+            video.classList.add('hidden');
+            cameraPlaceholder.classList.remove('hidden');
+            startCameraBtn.classList.remove('hidden');
+            captureBtn.classList.add('hidden');
+            poseGuideOverlay.classList.add('hidden');
+            
+            // 恢复相机占位符内容
+            cameraPlaceholder.innerHTML = `
+                <div class="text-center">
+                    <i class="fa fa-camera text-4xl text-gray-400 mb-2"></i>
+                    <p class="text-gray-500">点击下方按钮开启相机</p>
+                </div>
+            `;
+        }
+        
+        // 拍照
+        function capturePhoto() {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+            
+            const imageUrl = canvas.toDataURL('image/jpeg');
+            capturedImages.push(imageUrl);
+            
+            // 保存到相册（模拟）
+            saveToAlbum(imageUrl);
+            
+            // 更新历史显示
+            updateHistoryDisplay();
+            
+            // 切换到下一个姿势
+            nextPose();
+        }
+        
+        // 保存到相册（模拟）
+        function saveToAlbum(imageUrl) {
+            // 在实际应用中，这里会调用保存到相册的API
+            // 现在只是模拟这个过程
+            console.log('保存照片到相册:', imageUrl);
+            
+            // 显示保存成功提示
+            const saveMessage = document.createElement('div');
+            saveMessage.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg fade-in';
+            saveMessage.innerHTML = `
+                <div class="flex items-center">
+                    <i class="fa fa-check-circle mr-2"></i>
+                    <span>照片已保存到相册！</span>
+                </div>
+            `;
+            document.body.appendChild(saveMessage);
+            
+            setTimeout(() => {
+                saveMessage.style.opacity = '0';
+                setTimeout(() => {
+                    saveMessage.remove();
+                }, 300);
+            }, 2000);
+        }
+        
+        // 更新历史显示
+        function updateHistoryDisplay() {
+            if (capturedImages.length === 0) {
+                historyContainer.innerHTML = '<p class="text-gray-500 text-center col-span-3">暂无拍摄记录</p>';
+                return;
+            }
+            
+            historyContainer.innerHTML = '';
+            capturedImages.forEach((imageUrl, index) => {
+                const imgElement = document.createElement('div');
+                imgElement.className = 'relative cursor-pointer hover:opacity-90 transition-opacity';
+                imgElement.innerHTML = `
+                    <img src="${imageUrl}" alt="拍摄 ${index + 1}" class="w-full h-20 object-cover rounded-lg">
+                    <div class="absolute bottom-1 right-1 bg-black bg-opacity-50 text-white text-xs px-1 rounded">
+                        ${index + 1}
+                    </div>
+                `;
+                
+                // 添加点击放大功能
+                imgElement.addEventListener('click', () => {
+                    showImageZoom(imageUrl, index + 1);
+                });
+                
+                historyContainer.appendChild(imgElement);
+            });
+        }
+        
+        // 显示图片放大
+        function showImageZoom(imageUrl, index) {
+            const zoomDiv = document.createElement('div');
+            zoomDiv.className = 'fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50';
+            zoomDiv.innerHTML = `
+                <div class="relative max-w-3xl max-h-[90vh]">
+                    <img src="${imageUrl}" alt="拍摄 ${index}" class="max-w-full max-h-[80vh] object-contain rounded-lg">
+                    <button class="absolute top-4 right-4 bg-white rounded-full p-2 shadow-lg">
+                        <i class="fa fa-times text-gray-800 text-xl"></i>
+                    </button>
+                    <div class="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black bg-opacity-70 text-white px-4 py-2 rounded-full">
+                        拍摄 ${index}
+                    </div>
+                </div>
+            `;
+            
+            // 添加关闭功能
+            const closeBtn = zoomDiv.querySelector('button');
+            closeBtn.addEventListener('click', () => {
+                zoomDiv.remove();
+            });
+            
+            // 点击背景关闭
+            zoomDiv.addEventListener('click', (e) => {
+                if (e.target === zoomDiv) {
+                    zoomDiv.remove();
+                }
+            });
+            
+            document.body.appendChild(zoomDiv);
+        }
+        
+        // 开始姿势引导
+        function startPoseGuide() {
+            if (poseInstructions.length === 0) return;
+            
+            currentPoseIndex = 0;
+            poseInstruction.textContent = poseInstructions[0];
+            poseGuideOverlay.classList.remove('hidden');
+        }
+        
+        // 下一个姿势
+        function nextPose() {
+            currentPoseIndex = (currentPoseIndex + 1) % poseInstructions.length;
+            poseInstruction.textContent = poseInstructions[currentPoseIndex];
+            
+            // 添加切换动画
+            poseGuideOverlay.style.opacity = '0';
+            setTimeout(() => {
+                poseGuideOverlay.style.opacity = '1';
+            }, 300);
+        }
+        
+        // 显示成功消息
+        function showSuccessMessage() {
+            successMessage.classList.remove('hidden');
+            successMessage.classList.add('fade-in');
+            
+            setTimeout(() => {
+                successMessage.style.opacity = '0';
+                setTimeout(() => {
+                    successMessage.classList.add('hidden');
+                    successMessage.style.opacity = '1';
+                }, 300);
+            }, 2000);
+        }
+        
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', initEvents);
+    </script>
+</body>
+</html>
